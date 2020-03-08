@@ -19,6 +19,7 @@ def augment_feature_vector(X):
     column_of_ones = np.zeros([len(X), 1]) + 1
     return np.hstack((column_of_ones, X))
 
+
 def compute_probabilities(X, theta, temp_parameter):
     """
     Computes, for each datapoint X[i], the probability that X[i] is labeled as j
@@ -32,7 +33,16 @@ def compute_probabilities(X, theta, temp_parameter):
         H - (k, n) NumPy array, where each entry H[j][i] is the probability that X[i] is labeled as j
     """
     #YOUR CODE HERE
-    raise NotImplementedError
+    n, d = X.shape  # 3, 5
+    k = theta.shape[0]  # 7
+
+    argument = (theta @ X.T) / temp_parameter  # (k x n)
+    c = np.amax(argument, axis=0)  # (1 x n)
+    numerator = np.exp(argument - c)  # (k x n) -- c is broadcast to (k x n)
+    denominator = np.sum(numerator, axis=0)  # (1 x n))
+
+    return np.divide(numerator, denominator)
+
 
 def compute_cost_function(X, Y, theta, lambda_factor, temp_parameter):
     """
@@ -51,7 +61,24 @@ def compute_cost_function(X, Y, theta, lambda_factor, temp_parameter):
         c - the cost value (scalar)
     """
     #YOUR CODE HERE
-    raise NotImplementedError
+    n, d = X.shape  # 3, 5
+    k = theta.shape[0]  # 7
+
+    probabilities = compute_probabilities(X, theta, temp_parameter)  # (k x n)
+    log_probs = np.log(probabilities)  # (k x n)
+
+    cost = 0
+    for i in range(n):
+        for j in range(k):
+            if Y[i]==j:
+                cost += -1 / n * np.sum(log_probs[j][i])
+
+    for j in range(k):
+        for l in range(d):
+            cost += lambda_factor / 2 * theta[j][l] ** 2
+
+    return cost
+
 
 def run_gradient_descent_iteration(X, Y, theta, alpha, lambda_factor, temp_parameter):
     """
@@ -71,7 +98,31 @@ def run_gradient_descent_iteration(X, Y, theta, alpha, lambda_factor, temp_param
         theta - (k, d) NumPy array that is the final value of parameters theta
     """
     #YOUR CODE HERE
-    raise NotImplementedError
+    """ My solution, which is inefficient but correct:
+    n, d = X.shape  # 3, 5
+    k = theta.shape[0]  # 7
+
+    probabilities = compute_probabilities(X, theta, temp_parameter)  # (k, n)
+    cost_gradient = np.zeros((k, d))
+    for m in range(k):
+        cost_gradient[m] = np.sum(np.asarray([-1/(n*temp_parameter) * X[i] * ((Y[i] == m) - probabilities[m][i]) for i in range(n)]), axis=0)  + lambda_factor * theta[m]
+
+    return theta - alpha * cost_gradient
+    """
+
+    # Given solution, which is correct and efficient for sparse matrices:
+    itemp = 1. / temp_parameter
+    num_examples = X.shape[0]
+    num_labels = theta.shape[0]
+    probabilities = compute_probabilities(X, theta, temp_parameter)
+    # M[i][j] = 1 if y^(j) = i and 0 otherwise.
+    M = sparse.coo_matrix(([1] * num_examples, (Y, range(num_examples))),
+                          shape=(num_labels, num_examples)).toarray()
+    non_regularized_gradient = np.dot(M - probabilities, X)
+    non_regularized_gradient *= -itemp / num_examples
+
+    return theta - alpha * (non_regularized_gradient + lambda_factor * theta)
+
 
 def update_y(train_y, test_y):
     """
@@ -91,7 +142,8 @@ def update_y(train_y, test_y):
                     for each datapoint in the test set
     """
     #YOUR CODE HERE
-    raise NotImplementedError
+    return np.mod(train_y, 3), np.mod(test_y, 3)
+
 
 def compute_test_error_mod3(X, Y, theta, temp_parameter):
     """
@@ -109,7 +161,15 @@ def compute_test_error_mod3(X, Y, theta, temp_parameter):
         test_error - the error rate of the classifier (scalar)
     """
     #YOUR CODE HERE
-    raise NotImplementedError
+    n = X.shape[0]
+    error = 0
+    classification_mod3 = np.mod(get_classification(X, theta, temp_parameter), 3)
+    for i in range(n):
+        if Y[i] != classification_mod3[i]:
+            error += 1
+
+    return error/n
+
 
 def softmax_regression(X, Y, temp_parameter, alpha, lambda_factor, k, num_iterations):
     """

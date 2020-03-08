@@ -16,8 +16,10 @@ def closed_form(X, Y, lambda_factor):
         represents the y-axis intercept of the model and therefore X[0] = 1
     """
     # YOUR CODE HERE
-    raise NotImplementedError
+    from numpy.linalg import inv
 
+    X2 = X.T @ X
+    return inv(X2 + lambda_factor * np.identity(len(X2))) @ X.T @ Y
 ### Functions which are already complete, for you to use ###
 
 def compute_test_error_linear(test_x, Y, theta):

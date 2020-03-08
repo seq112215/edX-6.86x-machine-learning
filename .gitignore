@@ -124,3 +124,5 @@ dmypy.json
 .pyre/
 
 Unit 1: Linear Classifiers and Generalizations/Project 1: Automatic Review Analyzer/sentiment_analysis/.idea/
+
+Unit 2: Nonlinear Classification, Linear Regression, Collaborative Filtering/Project 2: Digit Recognition/mnist/part1/.idea/

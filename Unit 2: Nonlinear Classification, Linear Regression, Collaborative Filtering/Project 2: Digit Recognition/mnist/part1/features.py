@@ -16,8 +16,10 @@ def project_onto_PC(X, pcs, n_components, feature_means):
     #       of the eigenvectors returned by principal_components().
     #       Note that each eigenvector is already be a unit-vector,
     #       so the projection may be done using matrix multiplication.
-    raise NotImplementedError
+    X_centered = X - feature_means
+    projected = X_centered @ pcs[:, :n_components]
 
+    return projected
 
 ### Functions which are already complete, for you to use ###
 
@@ -131,7 +133,8 @@ def plot_PC(X, pcs, labels):
     the corresponding image.
     labels = a numpy array containing the digits corresponding to each image in X.
     """
-    pc_data = project_onto_PC(X, pcs, n_components=2)
+    X_centered, feature_means = center_data(X)
+    pc_data = project_onto_PC(X, pcs, 2, feature_means)
     text_labels = [str(z) for z in labels.tolist()]
     fig, ax = plt.subplots()
     ax.scatter(pc_data[:, 0], pc_data[:, 1], alpha=0, marker=".")
@@ -149,7 +152,7 @@ def reconstruct_PC(x_pca, pcs, n_components, X):
     representation, x_pca.
     X = the original data to which PCA was applied to get pcs.
     """
-    feature_means = X - center_data(X)
+    X_centered, feature_means = center_data(X)
     feature_means = feature_means[0, :]
     x_reconstructed = np.dot(x_pca, pcs[:, range(n_components)].T) + feature_means
     return x_reconstructed
