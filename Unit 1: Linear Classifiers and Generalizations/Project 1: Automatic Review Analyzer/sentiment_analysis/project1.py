@@ -6,6 +6,8 @@ import random
 
 
 #pragma: coderesponse template
+
+
 def get_order(n_samples):
     try:
         with open(str(n_samples) + '.txt') as fp:
@@ -16,10 +18,14 @@ def get_order(n_samples):
         indices = list(range(n_samples))
         random.shuffle(indices)
         return indices
+
+
 #pragma: coderesponse end
 
 
 #pragma: coderesponse template
+
+
 def hinge_loss_single(feature_vector, label, theta, theta_0):
     """
     Finds the hinge loss on a single data point given specific classification
@@ -37,11 +43,21 @@ def hinge_loss_single(feature_vector, label, theta, theta_0):
     given data point and parameters.
     """
     # Your code here
+    """ My solution:
     return np.maximum(0, 1 - label * (np.dot(feature_vector, theta) + theta_0))
+    """
+    # Instructor's solution: (same)
+    y = theta @ feature_vector + theta_0
+
+    return max(0, 1 - y * label)
+
+
 #pragma: coderesponse end
 
 
 #pragma: coderesponse template
+
+
 def hinge_loss_full(feature_matrix, labels, theta, theta_0):
     """
     Finds the total hinge loss on a set of data given specific classification
@@ -61,17 +77,27 @@ def hinge_loss_full(feature_matrix, labels, theta, theta_0):
     loss across all of the points in the feature matrix.
     """
     # Your code here
+    """ My solution:
     k = len(feature_matrix)
     total = 0
     for i in range(k):
         total += hinge_loss_single(feature_matrix[i], labels[i], theta, theta_0)
 
     return total / k
+    """
+    # Instructor's solution: (same, though much cleaner)
+    ys = feature_matrix @ theta + theta_0
+    loss = np.maximum(1 - ys * labels, np.zeros(len(labels)))
+
+    return np.mean(loss)
+
 
 #pragma: coderesponse end
 
 
 #pragma: coderesponse template
+
+
 def perceptron_single_step_update(
         feature_vector,
         label,
@@ -95,7 +121,7 @@ def perceptron_single_step_update(
     completed.
     """
     # Your code here
-
+    """ My solution:
     epsilon = 1e-9
     if label * (np.dot(current_theta, feature_vector) + current_theta_0) \
             <= epsilon:
@@ -104,10 +130,20 @@ def perceptron_single_step_update(
         return theta, theta_0
     else:
         return current_theta, current_theta_0
+    """
+    # Instructor's solution: (same)
+    if label * (np.dot(current_theta, feature_vector) + current_theta_0) <= 1e-7:
+        return (current_theta + label * feature_vector, current_theta_0 + label)
+
+    return (current_theta, current_theta_0)
+
+
 #pragma: coderesponse end
 
 
 #pragma: coderesponse template
+
+
 def perceptron(feature_matrix, labels, T):
     """
     Runs the full perceptron algorithm on a given set of data. Runs T
@@ -134,6 +170,7 @@ def perceptron(feature_matrix, labels, T):
     the feature matrix.
     """
     # Your code here
+    """ My solution:
     n = len(feature_matrix[0])
     theta = np.zeros(n)
     theta_0 = 0
@@ -143,10 +180,26 @@ def perceptron(feature_matrix, labels, T):
                                                            labels[i],
                                                            theta, theta_0)
     return theta, theta_0
+    """
+    # Instructor's solution: (same)
+    (nsamples, nfeatures) = feature_matrix.shape
+    theta = np.zeros(nfeatures)
+    theta_0 = 0.0
+
+    for t in range(T):
+        for i in get_order(nsamples):
+            theta, theta_0 = perceptron_single_step_update(
+            feature_matrix[i], labels[i], theta, theta_0)
+
+    return (theta, theta_0)
+
+
 #pragma: coderesponse end
 
 
 #pragma: coderesponse template
+
+
 def average_perceptron(feature_matrix, labels, T):
     """
     Runs the average perceptron algorithm on a given set of data. Runs T
@@ -177,6 +230,7 @@ def average_perceptron(feature_matrix, labels, T):
     find a sum and divide.
     """
     # Your code here
+    """ My solution:
     n = len(feature_matrix[0])
     k = len(get_order(feature_matrix.shape[0]))
     theta = np.zeros(n)
@@ -192,11 +246,30 @@ def average_perceptron(feature_matrix, labels, T):
             theta_0_sum += theta_0
 
     return theta_sum/(k*T), theta_0_sum/(k*T)
+    """
+    # Instructor's solution: (same)
+    (nsamples, nfeatures) = feature_matrix.shape
+    theta = np.zeros(nfeatures)
+    theta_sum = np.zeros(nfeatures)
+    theta_0 = 0.0
+    theta_0_sum = 0.0
+
+    for t in range(T):
+        for i in get_order(nsamples):
+            theta, theta_0 = perceptron_single_step_update(
+            feature_matrix[i], labels[i], theta, theta_0)
+            theta_sum += theta
+            theta_0_sum += theta_0
+
+    return (theta_sum / (nsamples * T), theta_0_sum / (nsamples * T))
+
 
 #pragma: coderesponse end
 
 
 #pragma: coderesponse template
+
+
 def pegasos_single_step_update(
         feature_vector,
         label,
@@ -224,6 +297,7 @@ def pegasos_single_step_update(
     completed.
     """
     # Your code here
+    """ My solution:
     epsilon = 1e-7
     if label * (np.dot(current_theta, feature_vector) + current_theta_0) - 1 \
             <= epsilon:
@@ -234,9 +308,20 @@ def pegasos_single_step_update(
         theta_0 = current_theta_0
 
     return theta, theta_0
+    """
+    # Instructor's solution: (uses 0 instead of epsilon)
+    mult = 1 - (eta * L)
+
+    if label * (np.dot(feature_vector, current_theta) + current_theta_0) <= 1:
+        return ((mult * current_theta) + (eta * label * feature_vector),
+                (current_theta_0) + (eta * label))
+
+    return (mult * current_theta, current_theta_0)
 
 
 #pragma: coderesponse template
+
+
 def pegasos(feature_matrix, labels, T, L):
     """
     Runs the Pegasos algorithm on a given set of data. Runs T
@@ -267,6 +352,7 @@ def pegasos(feature_matrix, labels, T, L):
     parameter, found after T iterations through the feature matrix.
     """
     # Your code here
+    """ My solution:
     n = len(feature_matrix[0])
     theta = np.zeros(n)
     theta_0 = 0
@@ -279,12 +365,32 @@ def pegasos(feature_matrix, labels, T, L):
                                                         labels[i], L, eta,
                                                         theta, theta_0)
     return theta, theta_0
+    """
+    # Instructor's solution: (same)
+    (nsamples, nfeatures) = feature_matrix.shape
+    theta = np.zeros(nfeatures)
+    theta_0 = 0
+    count = 0
+
+    for t in range(T):
+        for i in get_order(nsamples):
+            count += 1
+            eta = 1.0 / np.sqrt(count)
+            (theta, theta_0) = pegasos_single_step_update(feature_matrix[i],
+                                                          labels[i], L, eta,
+                                                          theta, theta_0)
+
+    return (theta, theta_0)
+
+
 #pragma: coderesponse end
 
 # Part II
 
 
 #pragma: coderesponse template
+
+
 def classify(feature_matrix, theta, theta_0):
     """
     A classification function that uses theta and theta_0 to classify a set of
@@ -303,7 +409,7 @@ def classify(feature_matrix, theta, theta_0):
     be considered a positive classification.
     """
     # Your code here
-
+    """ My solution:
     n = len(feature_matrix)
     predictions = np.zeros(n)
 
@@ -314,12 +420,17 @@ def classify(feature_matrix, theta, theta_0):
             predictions[k] = -1
 
     return predictions
+    """
+    # Instructor's solution: (MUCH cleaner!)
+     return (feature_matrix @ theta + theta_0 > 1e-7) * 2.0 - 1
 
 
 #pragma: coderesponse end
 
 
 #pragma: coderesponse template
+
+
 def classifier_accuracy(
         classifier,
         train_feature_matrix,
@@ -353,7 +464,7 @@ def classifier_accuracy(
     accuracy of the trained classifier on the validation data.
     """
     # Your code here
-
+    """ My solution:
     theta, theta_0 = classifier(train_feature_matrix, train_labels, **kwargs)
 
     train_preds = classify(train_feature_matrix, theta, theta_0)
@@ -363,12 +474,24 @@ def classifier_accuracy(
     val_accuracy = accuracy(val_preds, val_labels)
 
     return train_accuracy, val_accuracy
+    """
+    # Instructor's solution: (same)
+    theta, theta_0 = classifier(train_feature_matrix, train_labels, **kwargs)
 
+    train_predictions = classify(train_feature_matrix, theta, theta_0)
+    val_predictions = classify(val_feature_matrix, theta, theta_0)
+
+    train_accuracy = accuracy(train_predictions, train_labels)
+    validation_accuracy = accuracy(val_predictions, val_labels)
+
+    return (train_accuracy, validation_accuracy)
 
 #pragma: coderesponse end
 
 
 #pragma: coderesponse template
+
+
 def extract_words(input_string):
     """
     Helper function for bag_of_words()
