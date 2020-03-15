@@ -422,7 +422,7 @@ def classify(feature_matrix, theta, theta_0):
     return predictions
     """
     # Instructor's solution: (MUCH cleaner!)
-     return (feature_matrix @ theta + theta_0 > 1e-7) * 2.0 - 1
+    return (feature_matrix @ theta + theta_0 > 1e-7) * 2.0 - 1
 
 
 #pragma: coderesponse end
