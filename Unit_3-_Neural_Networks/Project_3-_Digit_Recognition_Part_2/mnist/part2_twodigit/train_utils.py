@@ -11,6 +11,8 @@ class Flatten(nn.Module):
     """A custom layer that views an input as 1D."""
     
     def forward(self, input):
+        # print("Flatten input size: {}".format(input.size()))  # torch.Size([64, 64, 9, 5])
+        # print("Flatten output size: {}".format(input.view(input.size(0), -1).size()))  # torch.Size([64, 2880])
         return input.view(input.size(0), -1)
 
 
@@ -39,6 +41,16 @@ def train_model(train_data, dev_data, model, lr=0.01, momentum=0.9, nesterov=Fal
     """Train a model for N epochs given data and hyper-params."""
     # We optimize with SGD
     optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=momentum, nesterov=nesterov)
+
+    # Print model's state_dict
+    # print("Model's state_dict:")
+    # for param_tensor in model.state_dict():
+    #     print(param_tensor, "\t", model.state_dict()[param_tensor].size())
+
+    # Print optimizer's state_dict
+    # print("Optimizer's state_dict:")
+    # for var_name in optimizer.state_dict():
+    #     print(var_name, "\t", optimizer.state_dict()[var_name])
 
     for epoch in range(1, n_epochs + 1):
         print("-------------\nEpoch {}:\n".format(epoch))

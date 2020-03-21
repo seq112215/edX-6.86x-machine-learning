@@ -9,21 +9,64 @@ use_mini_dataset = True
 
 batch_size = 64
 nb_classes = 10
-nb_epoch = 30
+nb_epoch = 15
 num_classes = 10
 img_rows, img_cols = 42, 28 # input image dimensions
-
 
 
 class CNN(nn.Module):
 
     def __init__(self, input_dimension):
         super(CNN, self).__init__()
-        # TODO initialize model layers here
+        # print(input_dimension)  # 1176
+        self.conv1 = nn.Conv2d(1, 32, (3, 3))
+        self.conv2 = nn.Conv2d(32, 64, (3, 3))
+        self.maxpool = nn.MaxPool2d(((2, 2)))
+        self.flatten = Flatten()
+        self.relu = nn.ReLU()
+        self.linear = nn.Linear(2880, 128)
+        self.dropout = nn.Dropout(0.5)
+        self.linear_out1 = nn.Linear(128, num_classes)
+        self.linear_out2 = nn.Linear(num_classes, num_classes)
 
     def forward(self, x):
+        # Use same structure as part2_mnist/nnet_cnn.py
+        x1 = self.conv1(x)
+        x2 = self.relu(x1)
+        x3 = self.maxpool(x2)
+        x4 = self.conv2(x3)
+        x5 = self.relu(x4)
+        x6 = self.maxpool(x5)
+        x7 = self.flatten(x6)
+        # Flatten input size: torch.Size([64, 64, 9, 5])
+        # Flatten output size: torch.Size([64, 2880])
+        x8 = self.linear(x7)
+        x9 = self.dropout(x8)
 
-        # TODO use model layers to predict the two digits
+        out_first_digit = self.linear_out1(x9)
+        out_second_digit = self.linear_out2(out_first_digit)
+
+        """
+        Model's state_dict:
+        conv1.weight     torch.Size([32, 1, 3, 3])
+        conv1.bias       torch.Size([32])
+        conv2.weight     torch.Size([64, 32, 3, 3])
+        conv2.bias       torch.Size([64])
+        linear.weight    torch.Size([128, 2880])
+        linear.bias      torch.Size([128])
+        linear_out1.weight       torch.Size([10, 128])
+        linear_out1.bias         torch.Size([10])
+        linear_out2.weight       torch.Size([10, 10])
+        linear_out2.bias         torch.Size([10])
+        
+        Optimizer's state_dict:
+        state    {}
+        param_groups     [{'lr': 0.01, 'momentum': 0.9, 'dampening': 0, 
+        'weight_decay': 0, 'nesterov': False, 
+        'params': [139881607984944, 139881607985024, 139881607985264, 
+                   139881607985424, 139881607985824, 139881607985904, 
+                   139881607986144, 139881607986224, 139881607986464, 139881607986544]}]
+        """
 
         return out_first_digit, out_second_digit
 
@@ -49,7 +92,7 @@ def main():
 
     # Load model
     input_dimension = img_rows * img_cols
-    model = CNN(input_dimension) # TODO add proper layers to CNN class above
+    model = CNN(input_dimension)
 
     # Train
     train_model(train_batches, dev_batches, model)
@@ -63,3 +106,14 @@ if __name__ == '__main__':
     np.random.seed(12321)  # for reproducibility
     torch.manual_seed(12321)  # for reproducibility
     main()
+
+
+"""
+Takes about 30 seconds per epoch. After about 15 epochs, losses bounce back and forth.
+
+Results:
+
+Epoch 16:
+Train | loss1: 0.053827  accuracy1: 0.981623 | loss2: 0.074706  accuracy2: 0.975117
+Valid | loss1: 0.099358  accuracy1: 0.973538 | loss2: 0.083770  accuracy2: 0.973286
+"""

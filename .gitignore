@@ -127,3 +127,7 @@ dmypy.json
 Unit_1-_Linear_Classifiers_and_Generalizations/Project_1-_Automatic_Review_Analyzer/sentiment_analysis/.idea/
 
 Unit_2-_Nonlinear_Classification,_Linear_Regression,_Collaborative_Filtering/Project_2-_Digit_Recognition_Part_1/mnist/part1/.idea/
+
+Unit_3-_Neural_Networks/Project_3-_Digit_Recognition_Part_2/mnist/part2_mnist/.idea/
+
+Unit_3-_Neural_Networks/Project_3-_Digit_Recognition_Part_2/mnist/part2_twodigit/.idea/
