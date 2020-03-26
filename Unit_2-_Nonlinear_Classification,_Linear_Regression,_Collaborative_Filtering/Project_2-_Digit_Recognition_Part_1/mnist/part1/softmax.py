@@ -17,6 +17,7 @@ def augment_feature_vector(X):
     Returns: X_augment, an (n, d) NumPy array with the added feature for each datapoint
     """
     column_of_ones = np.zeros([len(X), 1]) + 1
+
     return np.hstack((column_of_ones, X))
 
 
@@ -32,9 +33,9 @@ def compute_probabilities(X, theta, temp_parameter):
     Returns:
         H - (k, n) NumPy array, where each entry H[j][i] is the probability that X[i] is labeled as j
     """
-    #YOUR CODE HERE
-    n, d = X.shape  # 3, 5
-    k = theta.shape[0]  # 7
+    """ My solution:
+    # n, d = X.shape  # 3, 5
+    # k = theta.shape[0]  # 7
 
     argument = (theta @ X.T) / temp_parameter  # (k x n)
     c = np.amax(argument, axis=0)  # (1 x n)
@@ -42,6 +43,16 @@ def compute_probabilities(X, theta, temp_parameter):
     denominator = np.sum(numerator, axis=0)  # (1 x n))
 
     return np.divide(numerator, denominator)
+    """
+    # Instructor's solution: (same)
+    itemp = 1 / temp_parameter
+    dot_products = itemp * theta.dot(X.T)
+    max_of_columns = dot_products.max(axis=0)
+    shifted_dot_products = dot_products - max_of_columns
+    exponentiated = np.exp(shifted_dot_products)
+    col_sums = exponentiated.sum(axis=0)
+
+    return exponentiated / col_sums
 
 
 def compute_cost_function(X, Y, theta, lambda_factor, temp_parameter):
@@ -60,7 +71,7 @@ def compute_cost_function(X, Y, theta, lambda_factor, temp_parameter):
     Returns
         c - the cost value (scalar)
     """
-    #YOUR CODE HERE
+    """ My solution:
     n, d = X.shape  # 3, 5
     k = theta.shape[0]  # 7
 
@@ -78,6 +89,17 @@ def compute_cost_function(X, Y, theta, lambda_factor, temp_parameter):
             cost += lambda_factor / 2 * theta[j][l] ** 2
 
     return cost
+    """
+    # Instructor's solution:  (same result, but much cleaner)
+    N = X.shape[0]
+    probabilities = compute_probabilities(X, theta, temp_parameter)
+    selected_probabilities = np.choose(Y, probabilities)
+    non_regulizing_cost = np.sum(np.log(selected_probabilities))
+    non_regulizing_cost *= -1 / N
+    regulizing_cost = np.sum(np.square(theta))
+    regulizing_cost *= lambda_factor / 2.0
+
+    return non_regulizing_cost + regulizing_cost
 
 
 def run_gradient_descent_iteration(X, Y, theta, alpha, lambda_factor, temp_parameter):
@@ -97,7 +119,6 @@ def run_gradient_descent_iteration(X, Y, theta, alpha, lambda_factor, temp_param
     Returns:
         theta - (k, d) NumPy array that is the final value of parameters theta
     """
-    #YOUR CODE HERE
     """ My solution, which is inefficient but correct:
     n, d = X.shape  # 3, 5
     k = theta.shape[0]  # 7
@@ -109,8 +130,7 @@ def run_gradient_descent_iteration(X, Y, theta, alpha, lambda_factor, temp_param
 
     return theta - alpha * cost_gradient
     """
-
-    # Given solution, which is correct and efficient for sparse matrices:
+    # Instructor's solution, which is correct and efficient for sparse matrices:
     itemp = 1. / temp_parameter
     num_examples = X.shape[0]
     num_labels = theta.shape[0]
@@ -141,8 +161,11 @@ def update_y(train_y, test_y):
         test_y_mod3 - (n, ) NumPy array containing the new labels (a number between 0-2)
                     for each datapoint in the test set
     """
-    #YOUR CODE HERE
+    """ My solution:
     return np.mod(train_y, 3), np.mod(test_y, 3)
+    """
+    # Instructor's solution: (same)
+    return np.remainder(train_y, 3), np.remainder(test_y, 3)
 
 
 def compute_test_error_mod3(X, Y, theta, temp_parameter):
@@ -160,7 +183,7 @@ def compute_test_error_mod3(X, Y, theta, temp_parameter):
     Returns:
         test_error - the error rate of the classifier (scalar)
     """
-    #YOUR CODE HERE
+    """ My solution: 
     n = X.shape[0]
     error = 0
     classification_mod3 = np.mod(get_classification(X, theta, temp_parameter), 3)
@@ -169,6 +192,11 @@ def compute_test_error_mod3(X, Y, theta, temp_parameter):
             error += 1
 
     return error/n
+    """
+    # Instructor's solution: (same, but much cleaner)
+    assigned_labels = get_classification(X, theta, temp_parameter)
+
+    return 1 - np.mean(np.remainder(assigned_labels, 3) == Y)
 
 
 def softmax_regression(X, Y, temp_parameter, alpha, lambda_factor, k, num_iterations):
@@ -198,7 +226,9 @@ def softmax_regression(X, Y, temp_parameter, alpha, lambda_factor, k, num_iterat
     for i in range(num_iterations):
         cost_function_progression.append(compute_cost_function(X, Y, theta, lambda_factor, temp_parameter))
         theta = run_gradient_descent_iteration(X, Y, theta, alpha, lambda_factor, temp_parameter)
+
     return theta, cost_function_progression
+
 
 def get_classification(X, theta, temp_parameter):
     """
@@ -216,7 +246,9 @@ def get_classification(X, theta, temp_parameter):
     """
     X = augment_feature_vector(X)
     probabilities = compute_probabilities(X, theta, temp_parameter)
+
     return np.argmax(probabilities, axis = 0)
+
 
 def plot_cost_function_over_time(cost_function_history):
     plt.plot(range(len(cost_function_history)), cost_function_history)
@@ -224,7 +256,9 @@ def plot_cost_function_over_time(cost_function_history):
     plt.xlabel('Iteration number')
     plt.show()
 
+
 def compute_test_error(X, Y, theta, temp_parameter):
     error_count = 0.
     assigned_labels = get_classification(X, theta, temp_parameter)
+
     return 1 - np.mean(assigned_labels == Y)

@@ -194,18 +194,18 @@ def run_softmax_on_MNIST_pca(temp_parameter=1.):
 # TODO: Use the plot_PC function in features.py to produce scatterplot
 #       of the first 100 MNIST images, as represented in the space spanned by the
 #       first 2 principal components found above.
-# plot_PC(train_x[range(100), ], pcs, train_y[range(100)])
+# plot_PC(train_x[range(000, 100), ], pcs, train_y[range(000, 100)], feature_means)
 
 
 # TODO: Use the reconstruct_PC function in features.py to show
 #       the first and second MNIST images as reconstructed solely from
 #       their 18-dimensional principal component representation.
 #       Compare the reconstructed images with the originals.
-# firstimage_reconstructed = reconstruct_PC(train_pca[0, ], pcs, n_components, train_x)
+# firstimage_reconstructed = reconstruct_PC(train_pca[0, ], pcs, n_components, train_x, feature_means)
 # plot_images(firstimage_reconstructed)
 # plot_images(train_x[0, ])
 
-# secondimage_reconstructed = reconstruct_PC(train_pca[1, ], pcs, n_components, train_x)
+# secondimage_reconstructed = reconstruct_PC(train_pca[1, ], pcs, n_components, train_x, feature_means)
 # plot_images(secondimage_reconstructed)
 # plot_images(train_x[1, ])
 
