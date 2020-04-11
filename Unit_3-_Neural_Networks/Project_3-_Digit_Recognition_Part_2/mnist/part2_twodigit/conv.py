@@ -16,6 +16,7 @@ img_rows, img_cols = 42, 28 # input image dimensions
 
 class CNN(nn.Module):
 
+    """ My solution:
     def __init__(self, input_dimension):
         super(CNN, self).__init__()
         # print(input_dimension)  # 1176
@@ -45,7 +46,7 @@ class CNN(nn.Module):
 
         out_first_digit = self.linear_out1(x9)
         out_second_digit = self.linear_out2(out_first_digit)
-
+        """
         """
         Model's state_dict:
         conv1.weight     torch.Size([32, 1, 3, 3])
@@ -58,17 +59,48 @@ class CNN(nn.Module):
         linear_out1.bias         torch.Size([10])
         linear_out2.weight       torch.Size([10, 10])
         linear_out2.bias         torch.Size([10])
-        
+
         Optimizer's state_dict:
         state    {}
-        param_groups     [{'lr': 0.01, 'momentum': 0.9, 'dampening': 0, 
-        'weight_decay': 0, 'nesterov': False, 
-        'params': [139881607984944, 139881607985024, 139881607985264, 
-                   139881607985424, 139881607985824, 139881607985904, 
+        param_groups     [{'lr': 0.01, 'momentum': 0.9, 'dampening': 0,
+        'weight_decay': 0, 'nesterov': False,
+        'params': [139881607984944, 139881607985024, 139881607985264,
+                   139881607985424, 139881607985824, 139881607985904,
                    139881607986144, 139881607986224, 139881607986464, 139881607986544]}]
         """
-
+        """
         return out_first_digit, out_second_digit
+        """
+
+        # Instructor's solution: (WAY more compact, same network)
+    def __init__(self, input_dimension):
+        super(CNN, self).__init__()
+        self.linear1 = nn.Linear(input_dimension, 64)
+        self.linear2 = nn.Linear(64, 64)
+        self.linear_first_digit = nn.Linear(64, 10)
+        self.linear_second_digit = nn.Linear(64, 10)
+
+        self.encoder = nn.Sequential(
+              nn.Conv2d(1, 8, (3, 3)),
+              nn.ReLU(),
+              nn.MaxPool2d((2, 2)),
+              nn.Conv2d(8, 16, (3, 3)),
+              nn.ReLU(),
+              nn.MaxPool2d((2, 2)),
+              Flatten(),
+              nn.Linear(720, 128),
+              nn.Dropout(0.5),
+        )
+
+        self.first_digit_classifier = nn.Linear(128,10)
+        self.second_digit_classifier = nn.Linear(128,10)
+
+    def forward(self, x):
+        out = self.encoder(x)
+        out_first_digit = self.first_digit_classifier(out)
+        out_second_digit = self.second_digit_classifier(out)
+        return out_first_digit, out_second_digit
+
 
 def main():
     X_train, y_train, X_test, y_test = U.get_data(path_to_data_dir, use_mini_dataset)
@@ -113,7 +145,15 @@ Takes about 30 seconds per epoch. After about 15 epochs, losses bounce back and 
 
 Results:
 
-Epoch 16:
-Train | loss1: 0.053827  accuracy1: 0.981623 | loss2: 0.074706  accuracy2: 0.975117
-Valid | loss1: 0.099358  accuracy1: 0.973538 | loss2: 0.083770  accuracy2: 0.973286
+Epoch 30:
+Train | loss1: 0.025851  accuracy1: 0.990408 | loss2: 0.038036  accuracy2: 0.986794
+Valid | loss1: 0.104929  accuracy1: 0.978579 | loss2: 0.092213  accuracy2: 0.975806
+Test loss1: 0.114066  accuracy1: 0.973286  loss2: 0.133247   accuracy2: 0.968246
+"""
+
+"""
+With only one set of Conv2d, ReLU, MaxPool, get
+Train | loss1: 0.050981  accuracy1: 0.981845 | loss2: 0.070573  accuracy2: 0.976201
+Valid | loss1: 0.133993  accuracy1: 0.961442 | loss2: 0.135496  accuracy2: 0.961694
+Test loss1: 0.173759  accuracy1: 0.959929  loss2: 0.218468   accuracy2: 0.940776
 """

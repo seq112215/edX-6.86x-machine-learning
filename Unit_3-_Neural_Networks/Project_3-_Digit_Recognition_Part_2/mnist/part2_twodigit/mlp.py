@@ -15,6 +15,7 @@ img_rows, img_cols = 42, 28 # input image dimensions
 
 class MLP(nn.Module):
 
+    """ My solution:
     def __init__(self, input_dimension):
         super(MLP, self).__init__()
         self.flatten = Flatten()
@@ -32,6 +33,26 @@ class MLP(nn.Module):
         out_second_digit = self.linear_out2(out_first_digit)
 
         return out_first_digit, out_second_digit
+    """
+
+    # Instructor's solution: (uses extra Linear(64, 64) layer then two different
+    #   Linear(64, 10) layers, whereas I ran the two digit output one after the other)
+    def __init__(self, input_dimension):
+        super(MLP, self).__init__()
+        self.flatten = Flatten()
+        self.linear1 = nn.Linear(input_dimension, 64)
+        self.linear2 = nn.Linear(64, 64)
+        self.linear_first_digit = nn.Linear(64, 10)
+        self.linear_second_digit = nn.Linear(64, 10)
+
+    def forward(self, x):
+        xf = self.flatten(x)
+        out1 = F.relu(self.linear1(xf))
+        out2 = F.relu(self.linear2(out1))
+        out_first_digit = self.linear_first_digit(out2)
+        out_second_digit = self.linear_second_digit(out2)
+        return out_first_digit, out_second_digit
+
 
 def main():
     X_train, y_train, X_test, y_test = U.get_data(path_to_data_dir, use_mini_dataset)
