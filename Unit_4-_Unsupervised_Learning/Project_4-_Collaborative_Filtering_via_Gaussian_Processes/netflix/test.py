@@ -9,4 +9,7 @@ K = 4
 n, d = X.shape
 seed = 0
 
-# TODO: Your code here
+mixture, post = common.init(X, K,  seed)
+mixture, post, ln_like = em.run(X, mixture, post)
+
+print(mixture)
