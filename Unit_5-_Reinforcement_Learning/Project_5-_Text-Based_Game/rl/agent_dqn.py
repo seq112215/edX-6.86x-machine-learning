@@ -40,7 +40,7 @@ def epsilon_greedy(state_vector, epsilon):
     Returns:
         (int, int): the indices describing the action/object to take
     """
-
+    # My solution:
     if np.random.random() < epsilon:
         action_index, object_index = np.random.randint(0, NUM_ACTIONS), \
                                      np.random.randint(0, NUM_OBJECTS)
@@ -68,7 +68,6 @@ class DQN(nn.Module):
         return self.state2action(state), self.state2object(state)
 
 
-# pragma: coderesponse template
 def deep_q_learning(current_state_vector, action_index, object_index, reward,
                     next_state_vector, terminal):
     """Updates the weights of the DQN for a given transition
@@ -84,6 +83,7 @@ def deep_q_learning(current_state_vector, action_index, object_index, reward,
     Returns:
         None
     """
+    # My solution:
     with torch.no_grad():
         q_values_action_next, q_values_object_next = model(next_state_vector)
 
@@ -105,7 +105,6 @@ def deep_q_learning(current_state_vector, action_index, object_index, reward,
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
-# pragma: coderesponse end
 
 
 def run_episode(for_training):
@@ -114,11 +113,12 @@ def run_episode(for_training):
         If for training, update Q function
         If for testing, computes and return cumulative discounted reward
     """
+    # My solution:
     epsilon = TRAINING_EP if for_training else TESTING_EP
     epi_reward = 0
 
     # initialize for each episode
-    (current_room_desc, current_quest_desc, terminal) = framework.newGame()
+    current_room_desc, current_quest_desc, terminal = framework.newGame()
 
     t = 0
     while not terminal:
@@ -213,3 +213,4 @@ if __name__ == '__main__':
 
     # print average reward after convergence at about 50 epochs
     print(np.mean(np.mean(epoch_rewards_test, axis=0)[50:]))  # 0.4805455949371337
+    # Instructor's solution: 0.50

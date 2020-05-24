@@ -22,7 +22,6 @@ NUM_ACTIONS = len(ACTIONS)
 NUM_OBJECTS = len(OBJECTS)
 
 
-# pragma: coderesponse template
 def epsilon_greedy(state_1, state_2, q_func, epsilon):
     """Returns an action selected by an epsilon-Greedy exploration policy
 
@@ -34,7 +33,7 @@ def epsilon_greedy(state_1, state_2, q_func, epsilon):
     Returns:
         (int, int): the indices describing the action/object to take
     """
-    action_index, object_index = None, None
+    """ My solution:
     if np.random.random() < epsilon:
         action_index, object_index = np.random.randint(0, NUM_ACTIONS), \
                                      np.random.randint(0, NUM_OBJECTS)
@@ -43,12 +42,21 @@ def epsilon_greedy(state_1, state_2, q_func, epsilon):
                                                       (NUM_ACTIONS, NUM_OBJECTS))
 
     return action_index, object_index
+    """
+    # Instructor's solution: (same)
+    coin = np.random.random_sample()
+
+    if coin < epsilon:
+        action_index = np.random.randint(NUM_ACTIONS)
+        object_index = np.random.randint(NUM_OBJECTS)
+    else:
+        q_values = q_func[state_1, state_2, :, :]
+        action_index, object_index = np.unravel_index(np.argmax(
+            q_values, axis=None), q_values.shape)
+
+    return action_index, object_index
 
 
-# pragma: coderesponse end
-
-
-# pragma: coderesponse template
 def tabular_q_learning(q_func, current_state_1, current_state_2, action_index,
                        object_index, reward, next_state_1, next_state_2,
                        terminal):
@@ -66,6 +74,7 @@ def tabular_q_learning(q_func, current_state_1, current_state_2, action_index,
     Returns:
         None
     """
+    """ My solution:
     if not terminal:
         q_func[current_state_1, current_state_2, action_index, object_index] = \
             (1 - ALPHA) * q_func[current_state_1, current_state_2,
@@ -78,12 +87,19 @@ def tabular_q_learning(q_func, current_state_1, current_state_2, action_index,
             ALPHA * reward
 
     return None  # This function shouldn't return anything
+    """
+    # Instructor's solution:
+    if terminal:
+        maxq_next_state = 0
+    else:
+        q_values_next_state = q_func[next_state_1, next_state_2, :, :]
+        maxq_next_state = np.max(q_values_next_state)
+
+    q_value = q_func[current_state_1, current_state_2, action_index, object_index]
+    q_func[current_state_1, current_state_2, action_index, object_index] = \
+        (1 - ALPHA) * q_value + ALPHA * (reward + GAMMA * maxq_next_state)
 
 
-# pragma: coderesponse end
-
-
-# pragma: coderesponse template
 def run_episode(for_training):
     """ Runs one episode
     If for training, update Q function
@@ -95,6 +111,7 @@ def run_episode(for_training):
     Returns:
         None
     """
+    """ My solution:
     epsilon = TRAINING_EP if for_training else TESTING_EP
 
     epi_reward = 0
@@ -136,8 +153,45 @@ def run_episode(for_training):
 
     if not for_training:
         return epi_reward
+    """
+    # Instructor's solution:
+    #   Difference reward section:
+    #       Uses epi_reward += gamma_step * reward, then gamma_step += GAMMA
+    epsilon = TRAINING_EP if for_training else TESTING_EP
+    gamma_step = 1
+    epi_reward = 0
 
-# pragma: coderesponse end
+    (current_room_desc, current_quest_desc, terminal) = framework.newGame()
+    while not terminal:
+        # Choose next action and execute
+        cur_room_desc_id = dict_room_desc[current_room_desc]
+        cur_quest_desc_id = dict_quest_desc[current_quest_desc]
+        (action_index, object_index) = epsilon_greedy(cur_room_desc_id,
+                                                      cur_quest_desc_id,
+                                                      q_func, epsilon)
+        (next_room_desc, next_quest_desc, reward,
+         terminal) = framework.step_game(current_room_desc, current_quest_desc,
+                                         action_index, object_index)
+
+        if for_training:
+            # update Q-function.
+            next_room_desc_id = dict_room_desc[next_room_desc]
+            next_quest_desc_id = dict_quest_desc[next_quest_desc]
+            tabular_q_learning(q_func, cur_room_desc_id, cur_quest_desc_id,
+                               action_index, object_index, reward,
+                               next_room_desc_id, next_quest_desc_id, terminal)
+
+        if not for_training:
+            # update reward
+            epi_reward = epi_reward + gamma_step * reward
+            gamma_step = gamma_step * GAMMA
+
+        # prepare next step
+        current_room_desc = next_room_desc
+        current_quest_desc = next_quest_desc
+
+    if not for_training:
+        return epi_reward
 
 
 def run_epoch():
@@ -197,3 +251,4 @@ if __name__ == '__main__':
 
     # print average reward after convergence at about 15 epochs
     print(np.mean(np.mean(epoch_rewards_test, axis=0)[15:]))  # 0.5143261323957701
+    # Instructor's solution: 0.5135384423830186

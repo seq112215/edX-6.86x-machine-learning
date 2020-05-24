@@ -45,12 +45,26 @@ def epsilon_greedy(state_vector, theta, epsilon):
     Returns:
         (int, int): the indices describing the action/object to take
     """
+    """ My solution:
     if np.random.random() < epsilon:
         action_index, object_index = np.random.randint(0, NUM_ACTIONS), \
                                      np.random.randint(0, NUM_OBJECTS)
     else:
         action_index, object_index = np.unravel_index(np.argmax(theta @ state_vector),
                                                       (NUM_ACTIONS, NUM_OBJECTS))
+
+    return action_index, object_index
+    """
+    # Instructor's solution: (same)
+    coin = np.random.random_sample()
+
+    if coin < epsilon:
+        action_index = np.random.randint(NUM_ACTIONS)
+        object_index = np.random.randint(NUM_OBJECTS)
+    else:
+        q_values = theta @ state_vector
+        index = np.argmax(q_values)
+        action_index, object_index = index2tuple(index)
 
     return action_index, object_index
 
@@ -71,6 +85,7 @@ def linear_q_learning(theta, current_state_vector, action_index, object_index,
     Returns:
         None
     """
+    """ My solution:
     ao_index = tuple2index(action_index, object_index)
 
     if not terminal:
@@ -80,6 +95,19 @@ def linear_q_learning(theta, current_state_vector, action_index, object_index,
 
     theta[ao_index] += ALPHA * (y - (theta @ current_state_vector)[ao_index]) * \
                       current_state_vector
+    """
+    # Instructor's solution: (same)
+    q_values_next = theta @ next_state_vector
+    maxq_next = np.max(q_values_next)
+
+    q_values = theta @ current_state_vector
+    cur_index = tuple2index(action_index, object_index)
+    q_value_cur = q_values[cur_index]
+
+    target = reward + GAMMA * maxq_next * (1 - terminal)
+
+    theta[cur_index] = theta[cur_index] + ALPHA * (
+        target - q_value_cur) * current_state_vector
 
 
 def run_episode(for_training):
@@ -93,6 +121,7 @@ def run_episode(for_training):
     Returns:
         None
     """
+    # My solution:
     epsilon = TRAINING_EP if for_training else TESTING_EP
     epi_reward = 0
 
@@ -193,3 +222,4 @@ if __name__ == '__main__':
 
     # print average reward after convergence at about 100 epochs
     print(np.mean(np.mean(epoch_rewards_test, axis=0)[100:]))  # 0.40859893643615713
+    # Instructor's solution: 0.4084713161401367
