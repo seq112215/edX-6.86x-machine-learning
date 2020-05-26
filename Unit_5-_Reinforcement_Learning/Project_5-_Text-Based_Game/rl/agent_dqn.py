@@ -9,6 +9,9 @@ from tqdm import tqdm
 import framework
 import utils
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(device)
+
 DEBUG = False
 
 GAMMA = 0.5  # discounted factor
@@ -45,7 +48,7 @@ def epsilon_greedy(state_vector, epsilon):
         action_index, object_index = np.random.randint(0, NUM_ACTIONS), \
                                      np.random.randint(0, NUM_OBJECTS)
     else:
-        q_values_action, q_values_object = model(state_vector)
+        q_values_action, q_values_object = model(state_vector.to(device))
         _, action_index = q_values_action.max(0)
         _, object_index = q_values_object.max(0)
 
@@ -85,20 +88,20 @@ def deep_q_learning(current_state_vector, action_index, object_index, reward,
     """
     # My solution:
     with torch.no_grad():
-        q_values_action_next, q_values_object_next = model(next_state_vector)
+        q_values_action_next, q_values_object_next = model(next_state_vector.to(device))
 
     maxq_next = 1 / 2 * (q_values_action_next.max()
                          + q_values_object_next.max())
 
-    q_value_cur_state = model(current_state_vector)
+    q_value_cur_state = model(current_state_vector.to(device))
 
     current_Q = 1 / 2 * (q_value_cur_state[0][action_index] +
                          q_value_cur_state[1][object_index])
 
     if not terminal:
-        y = torch.as_tensor(float(reward) + (GAMMA * maxq_next))
+        y = torch.as_tensor(float(reward) + (GAMMA * maxq_next)).to(device)
     else:
-        y = torch.as_tensor(float(reward))
+        y = torch.as_tensor(float(reward)).to(device)
 
     loss = F.mse_loss(current_Q, y)
 
@@ -125,7 +128,7 @@ def run_episode(for_training):
         # Choose next action and execute
         current_state = current_room_desc + current_quest_desc
         current_state_vector = torch.FloatTensor(
-            utils.extract_bow_feature_vector(current_state, dictionary))
+            utils.extract_bow_feature_vector(current_state, dictionary)).to(device)
 
         action_index, object_index = epsilon_greedy(current_state_vector, epsilon)
 
@@ -136,7 +139,7 @@ def run_episode(for_training):
         next_state = next_room_desc + next_quest_desc
 
         next_state_vector = torch.FloatTensor(
-            utils.extract_bow_feature_vector(next_state, dictionary))
+            utils.extract_bow_feature_vector(next_state, dictionary)).to(device)
 
         if for_training:
             # update Q-function.
@@ -172,7 +175,7 @@ def run():
     """Returns array of test reward per epoch for one run"""
     global model
     global optimizer
-    model = DQN(state_dim, NUM_ACTIONS, NUM_OBJECTS)
+    model = DQN(state_dim, NUM_ACTIONS, NUM_OBJECTS).to(device)
     optimizer = optim.SGD(model.parameters(), lr=ALPHA)
 
     single_run_epoch_rewards_test = []

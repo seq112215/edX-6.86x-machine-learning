@@ -6,6 +6,8 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(device)
 
 class Flatten(nn.Module):
     """A custom layer that views an input as 1D."""
@@ -23,19 +25,21 @@ def batchify_data(x_data, y_data, batch_size):
     batches = []
     for i in range(0, N, batch_size):
         batches.append({
-            'x': torch.tensor(x_data[i:i+batch_size], dtype=torch.float32),
-            'y': torch.tensor(y_data[i:i+batch_size], dtype=torch.long
+            'x': torch.tensor(x_data[i:i+batch_size], dtype=torch.float32, device=device),
+            'y': torch.tensor(y_data[i:i+batch_size], dtype=torch.long, device=device
         )})
     return batches
 
 def compute_accuracy(predictions, y):
     """Computes the accuracy of predictions against the gold labels, y."""
-    return np.mean(np.equal(predictions.numpy(), y.numpy()))
+    return np.mean(np.equal(predictions.cpu().detach().numpy(), y.cpu().detach().numpy()))
 
 
 # Training Procedure
 def train_model(train_data, dev_data, model, lr=0.01, momentum=0.9, nesterov=False, n_epochs=30):
     """Train a model for N epochs given data and hyper-params."""
+    model = model.to(device)
+
     # We optimize with SGD
     optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=momentum, nesterov=nesterov)
 
