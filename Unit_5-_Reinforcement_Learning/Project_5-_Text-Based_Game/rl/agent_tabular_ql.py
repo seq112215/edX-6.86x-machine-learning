@@ -1,7 +1,8 @@
 """Tabular QL agent"""
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from tqdm import tqdm
+
 import framework
 import utils
 
@@ -95,7 +96,8 @@ def tabular_q_learning(q_func, current_state_1, current_state_2, action_index,
         q_values_next_state = q_func[next_state_1, next_state_2, :, :]
         maxq_next_state = np.max(q_values_next_state)
 
-    q_value = q_func[current_state_1, current_state_2, action_index, object_index]
+    q_value = q_func[
+        current_state_1, current_state_2, action_index, object_index]
     q_func[current_state_1, current_state_2, action_index, object_index] = \
         (1 - ALPHA) * q_value + ALPHA * (reward + GAMMA * maxq_next_state)
 
@@ -250,5 +252,6 @@ if __name__ == '__main__':
     plt.show()
 
     # print average reward after convergence at about 15 epochs
-    print(np.mean(np.mean(epoch_rewards_test, axis=0)[15:]))  # 0.5143261323957701
+    print(
+        np.mean(np.mean(epoch_rewards_test, axis=0)[15:]))  # 0.5143261323957701
     # Instructor's solution: 0.5135384423830186

@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 
-import _pickle as cPickle, gzip
+import utils
+from utils import *
+from train_utils import batchify_data, run_epoch, train_model
+# import _pickle as cPickle, gzip
 import numpy as np
 from tqdm import tqdm
 import torch
@@ -9,9 +12,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 import sys
 sys.path.append("..")
-import utils
-from utils import *
-from train_utils import batchify_data, run_epoch, train_model
+
 
 def main():
     # Load the dataset

@@ -9,6 +9,7 @@ import torch.nn as nn
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 
+
 class Flatten(nn.Module):
     """A custom layer that views an input as 1D."""
 
@@ -16,6 +17,7 @@ class Flatten(nn.Module):
         # print("Flatten input size: {}".format(input.size()))
         # print("Flatten output size: {}".format(input.view(input.size(0), -1).size()))
         return input.view(input.size(0), -1)
+
 
 # Helpers
 def batchify_data(x_data, y_data, batch_size):
@@ -29,6 +31,7 @@ def batchify_data(x_data, y_data, batch_size):
             'y': torch.tensor(y_data[i:i+batch_size], dtype=torch.long, device=device
         )})
     return batches
+
 
 def compute_accuracy(predictions, y):
     """Computes the accuracy of predictions against the gold labels, y."""
@@ -67,6 +70,7 @@ def train_model(train_data, dev_data, model, lr=0.01, momentum=0.9, nesterov=Fal
         # Save model
         torch.save(model, 'mnist_model_fully_connected.pt')
     return val_acc
+
 
 def run_epoch(data, model, optimizer):
     """Train model for one pass of train data, and return loss, acccuracy"""
